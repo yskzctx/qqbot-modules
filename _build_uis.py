@@ -151,4 +151,12 @@ build("scheduled_msg", "定时消息", [
      "08:00|group|123456|大家早上好！\n22:30|private|10001|该休息啦"),
 ], {"enabled": True})
 
+build("system_kit", "系统工具", [
+    ("check", "enabled", "启用模块"),
+    ("text", "cmd_prefix", "命令前缀", "系统"),
+    ("check", "allow_delete", "允许删除文件/文件夹（关闭后仅管理员也不能删）"),
+    ("textarea", "admins_hint", "管理员在核心 config.json 的 permissions.admins 中配置（此处仅提示，不保存）",
+     "管理员QQ填在 QQBotData/config.json 的 permissions.admins 列表里"),
+], {"enabled": True, "cmd_prefix": "系统", "allow_delete": True})
+
 print("all UIs built")
