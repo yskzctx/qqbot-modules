@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; color: #e6edf3;
+         background: transparent; padding: 6px 2px; margin: 0; }
+  h3 { margin: 4px 0 2px; font-size: 15px; }
+  .hint { font-size: 12px; color: #8b98a5; margin: 0 0 4px; }
+  label { display: block; font-size: 13px; color: #8b98a5; margin: 12px 0 6px; }
+  input[type=text], input[type=number], textarea { width: 100%; max-width: 480px;
+    background: #212a33; color: #e6edf3; border: 1px solid #2c3742; border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; outline: none; box-sizing: border-box; }
+  textarea { min-height: 90px; font-family: Consolas, monospace; }
+  input:focus, textarea:focus { border-color: #4c8dff; }
+  .check { display: flex; align-items: center; gap: 8px; margin: 10px 0;
+    font-size: 13px; color: #e6edf3; }
+  .check input { width: auto; }
+  button { background: #4c8dff; color: #fff; border: 0; border-radius: 8px;
+    padding: 9px 20px; font-size: 13px; cursor: pointer; margin-top: 14px; }
+  #tip { margin-top: 10px; font-size: 12px; color: #2ea86b; min-height: 16px; }
+</style>
+</head>
+<body>
+  <h3>关键词自动回复 — 配置</h3>
+  <p class="hint">数据保存在 QQBotData/data/，不会修改模块文件；保存后立即生效</p>
+  <div class="check"><input type="checkbox" id="enabled" checked><span>启用模块</span></div>
+  <div class="check"><input type="checkbox" id="in_group" checked><span>群聊生效</span></div>
+  <div class="check"><input type="checkbox" id="in_private" checked><span>私聊生效</span></div>
+  <div class="check"><input type="checkbox" id="group_at_only" ><span>群聊必须 @机器人 才触发</span></div>
+  <div class="check"><input type="checkbox" id="fuzzy" ><span>包含匹配（勾选=消息包含关键词即回复；否则需完全相等）</span></div>
+  <label>回复规则（每行一条：关键词=回复）</label>
+  <textarea id="rules" placeholder="在吗=在的~
+你好=你好呀！
+菜单=菜单：/签到 /积分 /排行"></textarea>
+  <button onclick="save()">保存</button>
+  <div id="tip"></div>
+<script>
+const token = new URLSearchParams(location.search).get("token") || "";
+const base = "/api/modules/auto_reply/config";
+const H = {"Content-Type": "application/json", "X-Access-Token": token};
+
+const FIELDS = {"enabled": "check", "in_group": "check", "in_private": "check", "group_at_only": "check", "fuzzy": "check", "rules": "textarea"};
+
+async function load(){
+  try {
+    const cfg = await (await fetch(base, {headers: H})).json();
+    for (const [key, type] of Object.entries(FIELDS)) {
+      const el = document.getElementById(key);
+      if (!el) continue;
+      if (type === "check") el.checked = !!cfg[key];
+      else el.value = cfg[key] !== undefined && cfg[key] !== null ? cfg[key] : "";
+    }
+  } catch(e) { tip("加载失败: " + e.message, true); }
+}
+
+async function save(){
+  const cfg = {};
+  for (const [key, type] of Object.entries(FIELDS)) {
+    const el = document.getElementById(key);
+    if (!el) continue;
+    if (type === "check") cfg[key] = el.checked;
+    else if (type === "number") cfg[key] = Number(el.value || 0);
+    else cfg[key] = el.value;
+  }
+  try {
+    const r = await fetch(base, {method: "POST", headers: H,
+      body: JSON.stringify({config: cfg})});
+    const d = await r.json();
+    tip(d.ok ? "已保存 ✓" : "保存失败: " + d.error, !d.ok);
+  } catch(e) { tip("保存失败: " + e.message, true); }
+}
+function tip(msg, err){ const t = document.getElementById("tip");
+  t.textContent = msg; t.style.color = err ? "#e5534b" : "#2ea86b"; }
+load();
+</script>
+</body>
+</html>
