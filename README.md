@@ -39,7 +39,21 @@
 - 调 AI：`await bot.app.ai.chat([...])`（OpenAI 兼容，面板「AI 配置」填写）
 - 发消息：`await bot.send_group_msg(group_id, text)` / `bot.send_private_msg(user_id, text)` / `bot.call_action(...)`
 - 下划线开头的 `.py` 不会被当作模块加载
-- 修改 modules 文件夹后自动热重载，无需重启机器人
+- 进阶装饰器（核心 2026-09 版起支持）：
+
+```python
+from framework.plugins import cmd, api, event
+
+@cmd("加法")                  # 聊天命令："加法 1 2" -> f(bot, event, args=["1","2"])
+@cmd("危险", admin=True)      # 仅管理员可触发
+@event(priority=10)           # 事件订阅，priority 越小越先，返回 False 拦截后续模块
+@api("GET", "/stats")         # 自有 HTTP API: /api/m/<模块文件名>/stats
+def on_unload(app): ...       # 卸载/热重载前清理钩子
+```
+
+- 系统能力：模块运行在核心进程内，Python 标准库全开放——文件读写、目录创建删除、
+  subprocess 执行命令、网络请求都可以做（系统工具模块 system_kit 是现成示例）
+- 修改 modules 文件夹（新增/删除/修改内容）都会自动热重载，无需重启机器人
 
 ## 免责声明
 
