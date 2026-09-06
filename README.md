@@ -41,7 +41,8 @@ async def on_event(bot, event):
 - 读写数据：`bot.app.get_module_config("<文件名>")`
 - 调用 AI：`await bot.app.ai.chat([...])`
 - 管理员判定：`bot.is_admin(uid)`
-- 任意 OneBot 动作：`bot.call_action(...)`
+- 任意 OneBot 动作：`bot.call_action(...)`——点赞(`send_like`)、戳一戳、群打卡、
+  群头衔、AI 语音、表情回应、群文件管理、OCR……130+ 动作全透传
 - Python 标准库全开放：文件、命令、定时、网络……
 
 👉 详见 **[模块开发指南](docs/模块开发指南.md)**
