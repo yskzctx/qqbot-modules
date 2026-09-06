@@ -1,60 +1,63 @@
 # QQ 机器人官方模块仓库
 
-配套 [qqbot-framework](https://github.com/yskzctx/qqbot-framework) 的模块合集。
-把想要的模块文件（`.py`，界面 `.html` 一并）复制到机器人的
-`QQBotData\modules\` 文件夹，几秒内自动加载，在面板「模块」页即可看到并配置。
+配套 [QQ 机器人框架](https://github.com/yskzctx/qqbot-framework)（v0.2.0+）的模块合集。
 
-## 模块列表
+> 📖 **开发模块请先读 [模块开发指南](docs/模块开发指南.md)** —— 从 5 分钟入门到
+> 装饰器 API、事件管道、配置界面、AI/系统/定时能力、实战案例、FAQ，一篇讲透。
 
-| 模块 | 文件 | 功能 | 默认命令/触发 |
+## 安装模块
+
+把想要的模块文件（`.py`，有 `.html` 的一并）复制到机器人的 `QQBotData\modules\` 文件夹，
+几秒内自动加载，面板「模块」页即可查看和配置。
+
+## 官方模块列表
+
+| 模块 | 命令/触发 | 功能 | 配置界面 |
 |---|---|---|---|
-| 关键词自动回复 | `auto_reply` | 关键词=回复 规则表，支持群/私聊开关、@限制、模糊匹配 | 按规则 |
-| AI 对话 | `ai_chat` | 消息带前缀调 AI（用面板「AI 配置」），支持人设与多轮历史 | `ai 你好` |
-| 入群欢迎 | `group_welcome` | 新人进群发欢迎语，模板支持 {nickname} {userid} | 自动 |
-| 每日签到与积分 | `sign_in` | 签到得随机积分、连签加成、查询与排行榜 | `签到` `积分` `积分排行` |
-| 防撤回提醒 | `recall_alert` | 群里撤回消息时提醒 | 自动 |
-| 定时消息 | `scheduled_msg` | 到点自动发消息，任务格式 `HH:MM\|group\|群号\|内容` | 自动 |
+| **关键词自动回复** `auto_reply` | 按规则 | 关键词=回复 规则表；群/私聊开关；@限制；模糊匹配 | ✓ |
+| **AI 对话** `ai_chat` | `ai 你好` | 带前缀调 AI 对话，支持人设、多轮记忆、群聊@触发 | ✓ |
+| **入群欢迎** `group_welcome` | 自动 | 新人进群发欢迎语，模板支持 {nickname} {userid} | ✓ |
+| **每日签到与积分** `sign_in` | `签到` `积分` `积分排行` | 随机积分、连签加成、排行榜 | ✓ |
+| **防撤回提醒** `recall_alert` | 自动 | 群成员撤回消息时提醒 | ✓ |
+| **定时消息** `scheduled_msg` | 自动 | `HH:MM\|group\|群号\|内容`，到点自动发，每日去重 | ✓ |
+| **系统工具** `system_kit` | `系统 ...` | 管理员在 QQ 里执行命令/管理文件/查看系统状态（仅管理员） | ✓ |
 
-每个模块都带同名 `.html` 配置界面：面板 → 模块 → 点对应模块即可可视化配置，
-数据存在机器人 `QQBotData\data\` 里，改配置不用重启。
+每个模块都带**同名 `.html` 可视化配置界面**。数据存储在机器人
+`QQBotData\data\`，升级/重装框架都不会丢失，也绝不回写模块文件。
 
-## 安装
-
-```
-1. 下载本仓库 modules\ 文件夹里你想要的 .py + .html
-2. 复制到机器人目录的 QQBotData\modules\
-3. 约 3 秒自动热重载（或在面板点「重载模块」）
-4. 面板 → 模块 → 选中模块 → 按需配置
-```
-
-## 自己写模块（规则速查）
-
-- 一个 `.py` = 一个模块，可带同名 `.html` 作为配置界面
-- 模块内定义（全部可选）：
-  - `MODULE_INFO = {"name": "显示名", "description": "描述", "version": "0.1"}`
-  - `register(app)` —— 加载时调用
-  - `async def on_event(bot, event)` —— 收到 QQ 事件（消息/通知/请求）
-  - `def on_config(app, config)` —— 面板保存该模块配置时回调
-- 读写自己的数据：`bot.app.get_module_config("<文件名>")` / `bot.app.set_module_config(...)`（存 `QQBotData\data\<文件名>.json`，不回写模块文件）
-- 调 AI：`await bot.app.ai.chat([...])`（OpenAI 兼容，面板「AI 配置」填写）
-- 发消息：`await bot.send_group_msg(group_id, text)` / `bot.send_private_msg(user_id, text)` / `bot.call_action(...)`
-- 下划线开头的 `.py` 不会被当作模块加载
-- 进阶装饰器（核心 2026-09 版起支持）：
+## 自己写模块
 
 ```python
-from framework.plugins import cmd, api, event
+MODULE_INFO = {"name": "显示名", "description": "描述", "version": "0.1"}
 
-@cmd("加法")                  # 聊天命令："加法 1 2" -> f(bot, event, args=["1","2"])
-@cmd("危险", admin=True)      # 仅管理员可触发
-@event(priority=10)           # 事件订阅，priority 越小越先，返回 False 拦截后续模块
-@api("GET", "/stats")         # 自有 HTTP API: /api/m/<模块文件名>/stats
-def on_unload(app): ...       # 卸载/热重载前清理钩子
+async def on_event(bot, event):
+    if event.get("raw_message") == "/签到":
+        await bot.send_group_msg(event["group_id"], "签到成功！")
 ```
 
-- 系统能力：模块运行在核心进程内，Python 标准库全开放——文件读写、目录创建删除、
-  subprocess 执行命令、网络请求都可以做（系统工具模块 system_kit 是现成示例）
-- 修改 modules 文件夹（新增/删除/修改内容）都会自动热重载，无需重启机器人
+保存即生效（自动热重载）。完整能力一览：
+
+- `@cmd` / `@event` / `@api` 装饰器（聊天命令、事件订阅+拦截、自有 HTTP API）
+- 读写数据：`bot.app.get_module_config("<文件名>")`
+- 调用 AI：`await bot.app.ai.chat([...])`
+- 管理员判定：`bot.is_admin(uid)`
+- 任意 OneBot 动作：`bot.call_action(...)`
+- Python 标准库全开放：文件、命令、定时、网络……
+
+👉 详见 **[模块开发指南](docs/模块开发指南.md)**
+
+## 目录结构
+
+```
+├── README.md            本文件
+├── docs/
+│   └── 模块开发指南.md   ★ 完整开发文档
+├── modules/             全部官方模块（.py + .html 配置界面）
+└── tools/
+    └── build_uis.py     配置界面生成器（开发工具）
+```
 
 ## 免责声明
 
-模块仅用于自动化自己的 QQ 账号，请遵守平台规则与当地法规，勿用于骚扰、垃圾信息等用途。
+模块仅用于自动化自己拥有的小号，请遵守平台规则与当地法律法规，勿用于骚扰、
+垃圾信息等用途。
